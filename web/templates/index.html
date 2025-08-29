@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StockVisor — App Operativa</title>
+  <style>
+    :root{
+      --bg0:#0B0F1A; --bg1:#0E1524; --glass:rgba(21,27,40,.60); --glass-border:rgba(255,255,255,.06);
+      --text:#E7EEFF; --muted:#A9B4C8; --accent:#3D68FF; --ok:#2ecc71; --warn:#f1c40f; --err:#ff6b6b;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;
+      background:
+        radial-gradient(1100px 600px at 85% -10%, rgba(61,104,255,.18), transparent 60%),
+        radial-gradient(900px 520px at -10% 35%, rgba(122,162,255,.12), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1) 40%, var(--bg0));
+      background-attachment: fixed; color:var(--text); font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1180px;margin:0 auto;padding:24px 16px 60px}
+    .card{background:var(--glass);backdrop-filter: blur(8px) saturate(140%);-webkit-backdrop-filter: blur(8px) saturate(140%);border:1px solid var(--glass-border);border-radius:16px;padding:18px;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+    .brand{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .brand h1{margin:0;font-size:20px}
+    .sub{color:var(--muted)}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;background:rgba(12,18,32,.55);border:1px solid var(--glass-border);color:var(--muted);font-weight:600}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--glass-border);border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;background:rgba(12,18,32,.55);color:var(--text)}
+    .btn.primary{background:var(--accent);border-color:transparent;color:#fff}
+    .btn.danger{background:#f34e4e;color:#fff;border-color:transparent}
+    .tabbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .tab-btn{padding:8px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(12,18,32,.55);cursor:pointer;font-weight:700;color:var(--text)}
+    .tab-btn.active{background:var(--accent);color:#fff;border-color:transparent}
+    .controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+    .input,.select{background:rgba(12,18,32,.55);border:1px solid var(--glass-border);color:var(--text);padding:8px 10px;border-radius:10px}
+    .grid{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;align-items:start}
+    .table{width:100%;border-collapse:separate;border-spacing:0 8px;font-size:14px}
+    .table th,.table td{padding:8px 12px;background:rgba(12,18,32,.55);border:1px solid var(--glass-border)}
+    .table th:first-child,.table td:first-child{border-top-left-radius:10px;border-bottom-left-radius:10px}
+    .table th:last-child,.table td:last-child{border-top-right-radius:10px;border-bottom-right-radius:10px;text-align:right}
+    .panel{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .dash{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--glass-border);background:linear-gradient(180deg,#0e1322,#0c1220);min-height:360px}
+    .dash canvas, .dash video{display:block;width:100%;height:auto}
+    .legend{position:absolute;bottom:8px;left:8px;display:flex;gap:8px}
+    .chip{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:rgba(12,18,32,.6);border:1px solid var(--glass-border);font-size:12px;color:var(--muted)}
+    .chip .dot{width:8px;height:8px;border-radius:50%}
+    /* Dashboard */
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+    .kpi{background:rgba(12,18,32,.55);border:1px solid var(--glass-border);border-radius:12px;padding:12px}
+    .kpi .label{color:var(--muted);font-size:13px}
+    .kpi .value{font-weight:900;font-size:22px;margin-top:4px}
+    .charts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width: 980px){.charts{grid-template-columns:1fr}}
+    .chart-card{padding:12px}
+    .chart-card h3{margin:4px 0 8px;font-size:15px;color:var(--muted)}
+    .chart{width:100%;height:220px;display:block}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width: 980px){.two-col{grid-template-columns:1fr}}
+    .list{margin:8px 0 0 0;padding:0;list-style:none}
+    .list li{display:flex;justify-content:space-between;border:1px solid var(--glass-border);background:rgba(12,18,32,.55);border-radius:10px;padding:8px 10px;margin-bottom:8px}
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;border:1px solid var(--glass-border);background:rgba(12,18,32,.55);font-size:12px;}
+/* iOS-like switch */
+.switch{position:relative;display:inline-block;width:52px;height:28px;vertical-align:middle;margin-left:8px}
+.switch input{opacity:0;width:0;height:0}
+.switch .slider{position:absolute;inset:0;border-radius:999px;background:#3a4254;border:1px solid var(--glass-border);box-shadow:inset 0 2px 6px rgba(0,0,0,.4);transition:.2s}
+.switch .slider:before{content:"";position:absolute;height:22px;width:22px;left:3px;top:3px;border-radius:50%;background:linear-gradient(#fff,#dcdde1);box-shadow:0 2px 4px rgba(0,0,0,.35);transition:.2s}
+.switch input:checked + .slider{background:linear-gradient(180deg,#4a90ff,#2b6bff);}
+.switch input:checked + .slider:before{transform:translateX(24px);}
+    footer{opacity:.7;margin-top:14px}
+    /* Home helpers */
+    .drop{display:flex;align-items:center;justify-content:center;border:1px dashed var(--glass-border);background:rgba(12,18,32,.45);border-radius:12px;height:140px;color:var(--muted)}
+    .drop.drag{outline:2px solid var(--accent);}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="brand">
+      <h1>StockVisor v8 — App operativa</h1>
+      <div class="panel">
+        <span class="pill">Modo: <select id="mode" class="select"><option value="demo">demo</option><option value="real">real</option></select></span>
+        <span class="pill">API: <input id="baseurl" class="input" style="width:260px" value="http://127.0.0.1:5000"/></span>
+        <a class="btn" href="#" id="backLanding">Ver landing</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="tabbar">
+        <button class="tab-btn active" data-tab="dash">Dashboard</button>
+        <button class="tab-btn" data-tab="home">Inicio</button>
+        <button class="tab-btn" data-tab="single">Imagen única</button>
+        <button class="tab-btn" data-tab="live">LiveCam</button>
+        <button class="tab-btn" data-tab="alerts">Alertas</button>
+                <button class="tab-btn" data-tab="products">Productos</button>
+        <button class="tab-btn" data-tab="reports">Reportes</button>
+        <button class="tab-btn" data-tab="cams">Cámaras</button>
+      </div>
+
+      <!-- DASHBOARD -->
+      <section id="tab-dash">
+        <div class="kpi-grid">
+          <div class="kpi"><div class="label">Fill rate (hoy)</div><div class="value" id="kpiFill">96,8%</div></div>
+          <div class="kpi"><div class="label">Quiebres activos</div><div class="value" id="kpiQuiebres">7</div></div>
+          <div class="kpi"><div class="label">Vencen ≤ 7 días</div><div class="value" id="kpiVencen">15</div></div>
+          <div class="kpi"><div class="label">Ahorro estimado (mes)</div><div class="value" id="kpiAhorro">$ 450.000</div></div>
+        </div>
+        <div class="charts">
+          <div class="card chart-card"><h3>Quiebres por día (14 días)</h3><canvas id="chQuiebres" class="chart"></canvas></div>
+          <div class="card chart-card"><h3>Fill rate por día</h3><canvas id="chFill" class="chart"></canvas></div>
+        </div>
+        <div class="two-col" style="margin-top:12px">
+          <div class="card chart-card"><h3>Alertas por tipo</h3><canvas id="chAlertas" class="chart"></canvas></div>
+          <div class="card chart-card"><h3>Ahorro acumulado (mes)</h3><canvas id="chAhorro" class="chart"></canvas></div>
+        </div>
+        <div class="two-col" style="margin-top:12px">
+          <div class="card" style="margin:0">
+            <strong>Salud de cámaras</strong>
+            <ul class="list" id="camHealth"></ul>
+          </div>
+          <div class="card" style="margin:0">
+            <strong>Últimas alertas</strong>
+            <ul class="list" id="alertList"></ul>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:12px">
+          <button class="btn" id="btnCsv">Descargar CSV</button>
+          <span class="badge">Exportar a Sheets (API)</span>
+        </div>
+      </section>
+      <!-- HOME -->
+      <section id="tab-home" hidden>
+        <p class="sub">Configurá y monitoreá tu sistema. En <strong>demo</strong> simulamos datos; en <strong>real</strong> usamos tu API.</p>
+        <div class="two-col" style="margin-top:12px">
+          <div class="card" style="margin:0">
+            <strong>Salud del sistema</strong>
+            <ul class="list" id="homeHealth"></ul>
+            <div class="panel" style="margin-top:8px">
+              <button class="btn" id="btnAddCam">➕ Conectar cámara IP</button>
+            </div>
+            <strong style="display:block;margin-top:8px">Cámaras</strong>
+            <ul class="list" id="homeCams"></ul>
+          </div>
+          <div class="card" style="margin:0">
+            <strong>Calculadora de ROI</strong>
+            <div class="controls" style="margin-top:8px">
+              <label class="pill">Ventas diarias <input id="roiVentas" type="number" class="input" style="width:120px;margin-left:8px" value="250000"/></label>
+              <label class="pill">Quiebre % <input id="roiQuiebre" type="number" step="0.01" class="input" style="width:90px;margin-left:8px" value="0.20"/></label>
+              <label class="pill">Margen % <input id="roiMargen" type="number" step="0.01" class="input" style="width:90px;margin-left:8px" value="0.35"/></label>
+            </div>
+            <div class="pill" style="margin-top:8px">Ahorro mensual estimado: <span id="roiVal" style="margin-left:8px;font-weight:800">$ 0</span></div>
+            <ul class="sub" style="margin-top:10px">
+              <li>POST <code>/single</code> ⇒ { boxes:[{x,y,w,h,cls,conf}], classes:[...] }</li>
+              <li>POST <code>/live/start</code> | GET <code>/live/stream</code> | GET <code>/live/stats</code></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SINGLE -->
+      <section id="tab-single" hidden>
+        <div class="controls">
+          <input type="file" id="fileInput" accept="image/*" class="input" />
+          <label class="pill">conf <input id="confInput" type="number" step="0.05" value="0.25" class="input" style="width:80px;margin-left:8px"/></label>
+          <label class="pill">imgsz <input id="imgszInput" type="number" value="640" class="input" style="width:90px;margin-left:8px"/></label>
+          <input id="classesInput" class="input" placeholder="p.ej: producto,zona,frente vacío" style="min-width:260px"/>
+          <button class="btn primary" id="processBtn">Procesar</button>
+        </div>
+        <div class="grid">
+          <div class="dash"><canvas id="singleCanvas" width="640" height="360"></canvas></div>
+          <div class="card" style="margin:0">
+            <strong>Conteo</strong>
+            <table class="table" style="margin-top:8px"><thead><tr><th>Clase</th><th>Cantidad</th></tr></thead><tbody id="countBody"><tr><td>Total</td><td>0</td></tr></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <!-- LIVE -->
+      <section id="tab-live" hidden>
+        <div class="controls">
+          <label class="pill">cam <input id="camIndex" type="number" value="0" class="input" style="width:60px;margin-left:8px"/></label>
+          <label class="pill">backend <select id="backendSel" class="select" style="margin-left:8px"><option>auto</option><option>cpu</option><option>gpu</option></select></label>
+          <label class="pill">conf <input id="confLive" type="number" step="0.05" value="0.25" class="input" style="width:80px;margin-left:8px"/></label>
+          <label class="pill">imgsz <input id="imgszLive" type="number" value="640" class="input" style="width:90px;margin-left:8px"/></label>
+          <label class="pill">mostrar video <span class="switch"><input id="showPreview" type="checkbox" checked><span class="slider"></span></span></label>
+          <button class="btn primary" id="startLive">Start</button>
+          <button class="btn danger" id="stopLive">Stop</button>
+        </div>
+        <div class="grid">
+          <div class="dash" id="livePreview"><video id="liveVideo" autoplay playsinline muted width="640" height="360"></video><canvas id="liveCanvas" width="640" height="360"></canvas>
+            <div class="legend">
+              <span class="chip"><span class="dot" style="background:#6dfd6d"></span>Producto</span>
+              <span class="chip"><span class="dot" style="background:#4b6bff"></span>Zona</span>
+              <span class="chip"><span class="dot" style="background:#ffd35a"></span>Frente vacío</span>
+            </div>
+          </div>
+          <div class="card" style="margin:0"><strong>Resumen (cada 0.5s)</strong>
+            <table class="table" style="margin-top:8px"><thead><tr><th>Clase</th><th>Cantidad</th></tr></thead><tbody id="liveBody"><tr><td>Total</td><td>0</td></tr></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ALERTAS -->
+      <section id="tab-alerts" hidden>
+        <div class="controls">
+          <label class="pill">Severidad
+            <select id="fltSeverity" class="select" style="margin-left:8px">
+              <option value="">(todas)</option>
+              <option>quiebre</option>
+              <option>fefo</option>
+              <option>seguridad</option>
+            </select>
+          </label>
+          <label class="pill">Buscar <input id="fltSearch" class="input" placeholder="SKU / góndola" style="margin-left:8px;width:200px"/></label>
+          <button class="btn" id="btnExportAlerts">Exportar CSV</button>
+        </div>
+        <div class="card" style="margin:0">
+          <table class="table" style="width:100%">
+            <thead><tr><th>Hora</th><th>Tipo</th><th>SKU</th><th>Góndola</th><th>Detalle</th><th>Estado</th></tr></thead>
+            <tbody id="alertsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      
+      <!-- PRODUCTOS -->
+      <section id="tab-products" hidden>
+        <div class="controls">
+          <label class="pill">Filtro <input id="prodSearch" class="input" placeholder="SKU / nombre" style="margin-left:8px;width:220px"/></label>
+        </div>
+        <div class="card" style="margin:0">
+          <table class="table"><thead><tr><th>SKU</th><th>Nombre</th><th>Conteo</th><th>Target</th><th>Estado</th></tr></thead><tbody id="prodBody"></tbody></table>
+        </div>
+      </section>
+
+      <!-- REPORTES -->
+      <section id="tab-reports" hidden>
+        <div class="controls">
+          <button class="btn" id="btnRepDay">Reporte diario</button>
+          <button class="btn" id="btnRepWeek">Reporte semanal</button>
+          <button class="btn" id="btnSched">Programar envío semanal</button>
+        </div>
+        <div class="card" style="margin:0">
+          <strong>Historial (demo)</strong>
+          <ul class="list" id="repList"></ul>
+        </div>
+      </section>
+
+      <!-- CÁMARAS -->
+      <section id="tab-cams" hidden>
+        <div class="controls">
+          <button class="btn" id="btnAddCam2">➕ Agregar cámara</button>
+        </div>
+        <div class="card" style="margin:0">
+          <table class="table"><thead><tr><th>Nombre</th><th>Estado</th><th>FPS</th><th>Latencia</th><th>Acciones</th></tr></thead><tbody id="camBody"></tbody></table>
+        </div>
+      </section>
+
+    </div>
+
+    <footer class="sub">© StockVisor — App demo v1</footer>
+  </main>
+
+  <script>
+// Compact helpers
+const S={mode:'demo',baseURL:'http://127.0.0.1:5000',showPreview:true};
+const $=id=>document.getElementById(id), html=(id,txt)=>{const el=$(id); if(el) el.innerHTML=txt};
+const modeEl=$('mode'), baseEl=$('baseurl'), backEl=$('backLanding');
+if(modeEl){ modeEl.value=S.mode; modeEl.onchange=()=>{ S.mode=modeEl.value; renderDashboard(); }; }
+if(baseEl){ baseEl.value=S.baseURL; baseEl.oninput=()=>{ S.baseURL=baseEl.value; }; }
+if(backEl){ backEl.onclick=()=>alert('Abrí la landing o vinculá tu URL pública.'); }
+
+// Tabs
+const tabs=['dash','home','single','live','alerts','products','reports','cams'];
+function setTab(name){tabs.forEach(t=>{$('tab-'+t).hidden=(t!==name)});document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  if(name==='home') renderHome(); if(name==='alerts') renderAlerts(); if(name==='products') renderProducts(); if(name==='reports') renderReports(); if(name==='cams') renderCams();}
+document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
+
+// Canvas utils (auto DPR resize + light draws)
+const DPR=()=>window.devicePixelRatio||1; function ctx2d(cv){const pr=DPR(), w=cv.clientWidth||600, h=cv.clientHeight||220, W=Math.floor(w*pr), H=Math.floor(h*pr); const ctx=cv.__ctx||cv.getContext('2d'); if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;ctx.setTransform(pr,0,0,pr,0,0);} cv.__ctx=ctx; return ctx}
+function drawLine(cv, data=[], col='#7aa2ff', fill=true, min=null, max=null){const ctx=ctx2d(cv), pr=DPR(), w=cv.width/pr, h=cv.height/pr, m={l:28,r:12,t:14,b:22}, W=w-m.l-m.r, H=h-m.t-m.b; ctx.clearRect(0,0,w,h); ctx.fillStyle='rgba(255,255,255,.04)'; ctx.fillRect(m.l,m.t,W,H); if(!data.length){ctx.fillStyle='#A9B4C8'; ctx.font='12px system-ui'; ctx.fillText('Sin datos',m.l+8,m.t+18);return;} if(data.length===1) data=[data[0],data[0]]; min??=Math.min(...data); max??=Math.max(...data); if(max===min) max=min+1; const sx=W/(data.length-1); ctx.strokeStyle='rgba(255,255,255,.08)'; for(let i=0;i<=4;i++){const y=m.t+H*i/4; ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(m.l+W,y); ctx.stroke()} ctx.lineWidth=2; ctx.strokeStyle=col; ctx.beginPath(); data.forEach((v,i)=>{const x=m.l+i*sx, y=m.t+H*(1-(v-min)/(max-min||1)); i?ctx.lineTo(x,y):ctx.moveTo(x,y)}); ctx.stroke(); if(fill){const g=ctx.createLinearGradient(0,m.t,0,m.t+H); g.addColorStop(0,col+'AA'); g.addColorStop(1,col+'00'); ctx.lineTo(m.l+W,m.t+H); ctx.lineTo(m.l,m.t+H); ctx.closePath(); ctx.fillStyle=g; ctx.fill();}}
+function drawBars(cv, labels=[], vals=[], col='#7aa2ff'){const ctx=ctx2d(cv), pr=DPR(), w=cv.width/pr, h=cv.height/pr, m={l:28,r:12,t:14,b:22}, W=w-m.l-m.r, H=h-m.t-m.b; ctx.clearRect(0,0,w,h); ctx.fillStyle='rgba(255,255,255,.04)'; ctx.fillRect(m.l,m.t,W,H); if(!vals.length){ctx.fillStyle='#A9B4C8'; ctx.font='12px system-ui'; ctx.fillText('Sin datos',m.l+8,m.t+18);return;} const max=Math.max(...vals,1), bw=W/(vals.length*1.6); ctx.fillStyle=col; vals.forEach((v,i)=>{const x=m.l+i*(bw*1.6)+bw*.3, bh=H*(v/max); ctx.fillRect(x,m.t+H-bh,bw,bh)})}
+function drawHeatmap(cv, rows){const ctx=ctx2d(cv), pr=DPR(), w=cv.width/pr, h=cv.height/pr, cols=6, rh=h/rows.length, cw=w/cols; ctx.clearRect(0,0,w,h); rows.forEach((r,i)=>{for(let c=0;c<cols;c++){const lv=(r.level||0)/100; ctx.fillStyle= lv>0.66?'#84CC16': lv>0.33?'#F59E0B':'#F43F5E'; ctx.globalAlpha=.25+lv*.6; ctx.fillRect(c*cw+2,i*rh+2,cw-4,rh-4);} ctx.globalAlpha=1; ctx.fillStyle='#A9B4C8'; ctx.font='12px system-ui'; ctx.fillText(r.name,8,i*rh+14)})}
+
+// Dashboard
+function renderDashboardDemo(){const days=[...Array(14)].map((_,i)=>i), q=days.map(()=>4+Math.random()*7|0), fr=days.map(()=>93+Math.random()*6), ah=days.map((_,i)=>Math.round(25000+i*15000+Math.random()*12000)), al={quiebre:28+(Math.random()*20|0),fefo:12+(Math.random()*10|0),seguridad:4+(Math.random()*6|0)}, cams=[{id:'Cam 1',status:'online',fps:(12+Math.random()*4).toFixed(1),lat:(180+Math.random()*80|0)+' ms'},{id:'Cam 2',status:'online',fps:(12+Math.random()*4).toFixed(1),lat:(180+Math.random()*80|0)+' ms'},{id:'Cam 3',status:'offline',fps:'0.0',lat:'—'}]; html('kpiFill', fr.at(-1).toFixed(1)+'%'); html('kpiQuiebres', q.at(-1)); html('kpiVencen', 10+(Math.random()*10|0)); $('kpiAhorro').textContent=new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(ah.reduce((a,b)=>a+b,0)); drawLine($('chQuiebres'),q,'#ff6b6b',true,0); drawLine($('chFill'),fr,'#6dfd6d',true,90,100); drawBars($('chAhorro'),days,ah,'#7aa2ff'); drawBars($('chAlertas'),Object.keys(al),Object.values(al),'#ffd35a'); const ul=$('camHealth'); ul.innerHTML=''; cams.forEach(c=>{const li=document.createElement('li'); li.innerHTML=`<span>${c.id}</span><span class="sub">${c.status} · ${c.fps} FPS · ${c.lat}</span>`; ul.appendChild(li)}); const alUl=$('alertList'); alUl.innerHTML=''; [{t:'Quiebre en Zona A',v:'SKU crítico',ago:'hace 5 min'},{t:'FEFO: SKU B',v:'vence en 6 días',ago:'hace 18 min'},{t:'Seguridad',v:'movimiento fuera de horario',ago:'hace 1 h'}].forEach(i=>{const li=document.createElement('li'); li.innerHTML=`<span>${i.t}</span><span class="sub">${i.v} — ${i.ago}</span>`; alUl.appendChild(li)})}
+async function renderDashboardReal(){try{const b=S.baseURL,[sum,series,alerts,health]=await Promise.all([fetch(b+'/dashboard/summary').then(r=>r.json()),fetch(b+'/dashboard/series?days=14').then(r=>r.json()),fetch(b+'/alerts/recent?limit=10').then(r=>r.json()),fetch(b+'/health/cameras').then(r=>r.json())]); html('kpiFill',(sum.fill_rate*100).toFixed(1)+'%'); html('kpiQuiebres',sum.quiebres_activos); html('kpiVencen',sum.vencen_7d); $('kpiAhorro').textContent=new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(sum.ahorro_mes||0); drawLine($('chQuiebres'),series.quiebres,'#ff6b6b',true,0); drawLine($('chFill'),(series.fill_rate||[]).map(x=>x*100),'#6dfd6d',true,90,100); drawBars($('chAhorro'),series.dias,series.ahorro,'#7aa2ff'); drawBars($('chAlertas'),Object.keys(series.alertas||{}),Object.values(series.alertas||{}),'#ffd35a'); const ul=$('camHealth'); ul.innerHTML=''; (health.items||[]).forEach(c=>{const li=document.createElement('li'); li.innerHTML=`<span>${c.name}</span><span class="sub">${c.status} · ${c.fps} FPS · ${c.latency} ms</span>`; ul.appendChild(li)}); const alUl=$('alertList'); alUl.innerHTML=''; (alerts.items||[]).forEach(i=>{const li=document.createElement('li'); li.innerHTML=`<span>${i.title}</span><span class="sub">${i.subtitle}</span>`; alUl.appendChild(li)})}catch(e){console.warn('Fallo dashboard real, demo',e); renderDashboardDemo()}}
+const renderDashboard=()=>S.mode==='real'?renderDashboardReal():renderDashboardDemo(); setTab('dash'); renderDashboard(); window.addEventListener('resize',(()=>{let t; return()=>{clearTimeout(t); t=setTimeout(renderDashboard,120)}})());
+$('btnCsv')?.addEventListener('click',()=>{ const rows=[...document.querySelectorAll('#alertList li')].map(li=>li.textContent.trim()); const blob=new Blob([rows.join('\n')],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='resumen.txt'; a.click(); URL.revokeObjectURL(a.href); });
+
+// Imagen única
+const scv=$('singleCanvas'), sctx=scv?.getContext('2d'); let sImg=null; function drawImageCentered(img){if(!scv||!sctx){return} const cw=scv.width, ch=scv.height; sctx.fillStyle='#0c1220'; sctx.fillRect(0,0,cw,ch); if(img){const r=Math.min(cw/img.width,ch/img.height), w=img.width*r, h=img.height*r; sctx.drawImage(img,(cw-w)/2,(ch-h)/2,w,h)}}
+function drawBoxes(boxes=[]){if(!sctx)return; const colors={'producto':'#6dfd6d','zona':'#4b6bff','frente vacío':'#ffd35a'}; const counts={}; sctx.font='12px system-ui'; boxes.forEach(b=>{const {x,y,w,h,cls,conf}=b; counts[cls]=(counts[cls]||0)+1; sctx.strokeStyle=colors[cls]||'#6dfd6d'; sctx.lineWidth=2; sctx.strokeRect(x,y,w,h); const label=`${cls} ${(conf?.toFixed?conf.toFixed(2):'0.80')}`; sctx.fillStyle=(colors[cls]||'#6dfd6d')+'55'; const mw=sctx.measureText(label).width+12; sctx.fillRect(x,y-18,mw,20); sctx.fillStyle='#e7eeff'; sctx.fillText(label,x+6,y-4)}); const tbody=$('countBody'); if(!tbody) return; const total=Object.values(counts).reduce((a,b)=>a+b,0); tbody.innerHTML=`<tr><td>Total</td><td>${total}</td></tr>`+Object.entries(counts).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
+$('fileInput')?.addEventListener('change',e=>{const f=e.target.files?.[0]; if(!f) return; const img=new Image(); img.onload=()=>{sImg=img; drawImageCentered(sImg)}; img.src=URL.createObjectURL(f)});
+$('processBtn')?.addEventListener('click',async()=>{if(!sImg){alert('Seleccioná una imagen primero');return} if(S.mode==='demo'){const n=(Math.random()*8|0)+6, boxes=[], cw=scv.width, ch=scv.height, classes=(($('classesInput')?.value)||'producto,zona,frente vacío').split(',').map(s=>s.trim()); for(let i=0;i<n;i++) boxes.push({x:(Math.random()*(cw-160)|0)+20,y:(Math.random()*(ch-120)|0)+20,w:100+(Math.random()*80|0),h:60+(Math.random()*70|0),cls:classes[i%classes.length]||'producto',conf:.6+Math.random()*.35}); drawImageCentered(sImg); drawBoxes(boxes);} else {try{const fd=new FormData(); fd.append('file',$('fileInput').files[0]); fd.append('conf',$('confInput').value); fd.append('imgsz',$('imgszInput').value); fd.append('classes',$('classesInput').value); const r=await fetch(S.baseURL+'/single',{method:'POST',body:fd}); const d=await r.json(); drawImageCentered(sImg); drawBoxes(d.boxes||[])}catch(e){alert('Error llamando a /single')}}});
+
+// LiveCam (con preview opcional)
+const video=$('liveVideo'), lcv=$('liveCanvas'), lctx=lcv?.getContext('2d'); let stream=null, raf=null, timer=null, liveOn=false; const rand=(a,b)=> (Math.random()*(b-a+1)|0)+a; const setCounts=o=>{const tb=$('liveBody'); if(!tb) return; const tot=Object.values(o).reduce((a,b)=>a+b,0); tb.innerHTML=`<tr><td>Total</td><td>${tot}</td></tr>`+Object.entries(o).map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('')}; const simCounts=()=>{const c=['persona','zona','frente vacío'], out={}; for(let i=0;i<rand(1,4);i++){const k=c[i%c.length]; out[k]=(out[k]||0)+1} return out};
+function drawLive(){ if(!liveOn||!S.showPreview||!lctx) return; lctx.clearRect(0,0,lcv.width,lcv.height); const counts=simCounts(); const colors={persona:'#4b6bff',zona:'#6dfd6d','frente vacío':'#ffd35a'}; Object.keys(counts).forEach(cls=>{const x=rand(10,lcv.width-180), y=rand(10,lcv.height-120), w=rand(140,200), h=rand(100,160); lctx.strokeStyle=colors[cls]; lctx.lineWidth=2; lctx.strokeRect(x,y,w,h); lctx.fillStyle=colors[cls]+'55'; lctx.fillRect(x,y-18,120,20); lctx.fillStyle='#e7eeff'; lctx.font='12px system-ui'; lctx.fillText(cls+' 0.'+rand(70,95),x+6,y-4)}); setCounts(counts); raf=requestAnimationFrame(drawLive) }
+function updatePreview(){const wrap=$('livePreview'); if(wrap) wrap.style.display=S.showPreview?'':'none'; if(!S.showPreview){ if(raf) cancelAnimationFrame(raf), raf=null; if(stream){try{stream.getTracks().forEach(t=>t.stop())}catch{} stream=null} }}
+$('showPreview')?.addEventListener('change',e=>{S.showPreview=e.target.checked; updatePreview()}); updatePreview();
+$('startLive')?.addEventListener('click',async()=>{ if(timer) clearInterval(timer),timer=null; if(raf) cancelAnimationFrame(raf),raf=null; if(lctx) lctx.clearRect(0,0,lcv.width,lcv.height); html('liveBody','<tr><td>Total</td><td>0</td></tr>'); if(S.mode==='demo'){ try{ if(S.showPreview && navigator.mediaDevices?.getUserMedia){stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); video.srcObject=stream; await video.play()} liveOn=true; S.showPreview?drawLive(): (timer=setInterval(()=>setCounts(simCounts()),500)) }catch{alert('Permiso de cámara denegado o no disponible')} } else { try{ await fetch(S.baseURL+'/live/start',{method:'POST'}); liveOn=true; if(S.showPreview) drawLive(); else timer=setInterval(async()=>{ try{ const r=await fetch(S.baseURL+'/live/stats'); const d=await r.json(); setCounts(d.per_class||d.counts||{}) }catch{} },600) }catch{ alert('No pudimos iniciar /live/start') } }});
+$('stopLive')?.addEventListener('click',()=>{ liveOn=false; if(raf) cancelAnimationFrame(raf),raf=null; if(timer) clearInterval(timer),timer=null; if(stream){stream.getTracks().forEach(t=>t.stop()); stream=null} if(lctx) lctx.clearRect(0,0,lcv.width,lcv.height); html('liveBody','<tr><td>Total</td><td>0</td></tr>') });
+
+// Home (ROI + cámaras)
+let homeSetup=false; function setupHome(){ if(homeSetup) return; homeSetup=true; const upd=()=>{const v=$('roiVentas'), q=$('roiQuiebre'), m=$('roiMargen'), out=$('roiVal'); if(!v||!q||!m||!out) return; const ahorro=(+v.value||0)*30*(+q.value||0)*.30*(+m.value||0); out.textContent=new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0}).format(ahorro||0)}; ['roiVentas','roiQuiebre','roiMargen'].forEach(id=>$(id)?.addEventListener('input',upd)); upd(); }
+async function probeHealth(){ if(S.mode==='real'){ try{const [ping,cams]=await Promise.all([fetch(S.baseURL+'/health').then(r=>r.json()).catch(()=>({ok:false})),fetch(S.baseURL+'/health/cameras').then(r=>r.json()).catch(()=>({items:[]}))]); return {ok: ping.ok!==false, version: ping.version||'—', cams:cams.items||[]} }catch{ return {ok:false,version:'—',cams:[]} } } return {ok:true,version:'demo',cams:[{name:'Cam 1',status:'online',fps:'14.2',latency:210},{name:'Cam 2',status:'online',fps:'13.8',latency:230},{name:'Cam 3',status:'offline',fps:'0.0',latency:'—'}]} }
+async function renderHome(){ setupHome(); const h=await probeHealth(); $('homeHealth').innerHTML=`<li><span>API</span><span class="sub">${h.ok?'online ✅':'offline ❌'} · v ${h.version}</span></li>`; const list=$('homeCams'); list.innerHTML=''; (h.cams.length?h.cams:[{name:'Cam 1',status:'online',fps:'14.2',latency:210}]).forEach(c=>{const li=document.createElement('li'); li.innerHTML=`<span>${c.name||c.id}</span><span class="sub">${c.status||'online'} · ${c.fps||'14.0'} FPS · ${c.latency||c.lat||0} ms</span>`; list.appendChild(li)}); const btn=$('btnAddCam'); if(btn && !btn._wired){ btn._wired=true; btn.addEventListener('click',async()=>{ const url=prompt('URL RTSP/HTTP de la cámara (rtsp://usuario:pass@ip:554/stream)'); if(!url) return; if(S.mode==='real'){ try{ await fetch(S.baseURL+'/cameras/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})}); alert('Cámara enviada al backend')}catch{ alert('No pudimos enviar la cámara a la API') } } else { const li=document.createElement('li'); li.innerHTML=`<span>${url}</span><span class="sub">demo · pendiente</span>`; $('homeCams').appendChild(li) } }) } }
+
+// Alertas
+const demoAlerts=()=>{const t=['quiebre','fefo','seguridad'], g=['Góndola A','Góndola B','Depósito'], s=['COKE-500','SPRITE-500','PEP-500','FANTA-500']; return [...Array(18)].map((_,i)=>({ts:new Date(Date.now()-i*6e5).toLocaleTimeString(), type:t[i%t.length], sku:s[i%s.length], gondola:g[i%g.length], detail:i%3? (i%3===1?'vence en 5 días':'movimiento') :'stock < 30%', status: i%4?'enviada':'nuevo'}))}
+async function renderAlerts(){const body=$('alertsBody'); if(!body) return; let items=[]; if(S.mode==='real'){ try{const r=await fetch(S.baseURL+'/alerts/recent?limit=50'); const d=await r.json(); items=(d.items||d)||[]}catch{ items=demoAlerts() }} else items=demoAlerts(); const sev=$('fltSeverity')?.value||'', q=($('fltSearch')?.value||'').toLowerCase(); const rows=items.filter(a=>(!sev||a.type===sev)&&(!q||(a.sku+' '+a.gondola).toLowerCase().includes(q))).map(a=>`<tr><td>${a.ts}</td><td>${a.type}</td><td>${a.sku}</td><td>${a.gondola}</td><td>${a.detail}</td><td>${a.status}</td></tr>`).join(''); body.innerHTML=rows||'<tr><td colspan="6" class="sub">Sin datos</td></tr>'}
+$('fltSeverity')?.addEventListener('change',renderAlerts); $('fltSearch')?.addEventListener('input',renderAlerts); $('btnExportAlerts')?.addEventListener('click',()=>{ const rows=[...document.querySelectorAll('#alertsBody tr')].map(r=>[...r.children].map(td=>`"${td.textContent.replace(/"/g,'""')}"`).join(',')).join('\n'); const csv=`hora,tipo,sku,gondola,detalle,estado
+${rows}`; const blob=new Blob([csv],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='alertas.csv'; a.click(); URL.revokeObjectURL(a.href); });
+// Productos
+const demoProducts=()=>[{sku:'COKE-500',name:'Coca 500',count:76,target:96},{sku:'SPR-500',name:'Sprite 500',count:58,target:96},{sku:'PEP-500',name:'Pepsi 500',count:84,target:96}];
+async function renderProducts(){const body=$('prodBody'); if(!body) return; let items=[]; if(S.mode==='real'){ try{const r=await fetch(S.baseURL+'/products'); const d=await r.json(); items=(d.items||d)||[]}catch{ items=demoProducts() } } else items=demoProducts(); const q=($('prodSearch')?.value||'').toLowerCase(); const rows=items.filter(p=>!q||(p.sku+' '+p.name).toLowerCase().includes(q)).map(p=>`<tr><td>${p.sku}</td><td>${p.name}</td><td>${p.count}</td><td>${p.target}</td><td>${(p.count>=p.target)?'OK':'Faltante'}</td></tr>`).join(''); body.innerHTML=rows||'<tr><td colspan="5" class="sub">Sin datos</td></tr>'}
+$('prodSearch')?.addEventListener('input',renderProducts);
+
+// Reportes
+function renderReports(){const ul=$('repList'); if(!ul) return; ul.innerHTML=''; ['Reporte diario enviado','Reporte semanal — programado','Exportación mensual a Sheets'].forEach(t=>{const li=document.createElement('li'); li.className='list'; li.textContent=t; ul.appendChild(li)})}
+
+// Cámaras
+function renderCams(){const body=$('camBody'); if(!body) return; const cams=[{name:'Cam A',status:'online',fps:'14.2',lat:'210 ms'},{name:'Cam B',status:'online',fps:'13.8',lat:'230 ms'},{name:'Cam C',status:'offline',fps:'0.0',lat:'—'}]; body.innerHTML=cams.map(c=>`<tr><td>${c.name}</td><td>${c.status}</td><td>${c.fps}</td><td>${c.lat}</td><td><button class="btn">Reiniciar</button></td></tr>`).join('')}
+</script>

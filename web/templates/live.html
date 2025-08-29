@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="card">
+  <label>cam:</label><input id="cam" type="number" value="{{ cam }}" style="width:60px"/>
+  <label>backend:</label>
+  <select id="backend">
+    <option value="auto" selected>auto</option>
+    <option value="opencv">opencv</option>
+  </select>
+  <label>conf</label><input id="conf" type="number" step="0.01" value="{{ conf }}" style="width:70px"/>
+  <label>imgsz</label><input id="imgsz" type="number" value="{{ imgsz }}" style="width:70px"/>
+  <label>classes</label><input id="classes" type="text" value="{{ classes_str }}" placeholder="p.ej: bottle,cup" style="width:220px"/>
+  <button id="btnStart">Start</button>
+  <button id="btnStop" style="background:#ef4444">Stop</button>
+</div>
+
+<div class="row" style="margin-top:12px">
+  <div class="card">
+    <img id="live_img" alt="stream"/>
+  </div>
+  <div class="card">
+    <div class="small">Resumen (poll cada 0.5s)</div>
+    <table class="table">
+      <tbody id="statsBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const img = document.getElementById('live_img');
+const statsBody = document.getElementById('statsBody');
+const btnStart = document.getElementById('btnStart');
+const btnStop = document.getElementById('btnStop');
+
+async function pollStats(){
+  try{
+    const r = await fetch('/live/stats');
+    const j = await r.json();
+    statsBody.innerHTML = '';
+    const add=(k,v)=>{ let tr=document.createElement('tr'); tr.innerHTML=`<td>${k}</td><td>${v}</td>`; statsBody.appendChild(tr); };
+    add('FPS', j.fps?.toFixed ? j.fps.toFixed(2) : j.fps);
+    add('Total', j.total || 0);
+    for (const k of Object.keys(j.per_class||{})){ add(k, j.per_class[k]); }
+  }catch(e){ /* noop */ }
+}
+
+btnStart.onclick = async () => {
+  const body = {
+    cam: Number(document.getElementById('cam').value||0),
+    backend: document.getElementById('backend').value||'auto',
+    conf: Number(document.getElementById('conf').value||0.25),
+    imgsz: Number(document.getElementById('imgsz').value||640),
+    classes: (document.getElementById('classes').value||'').trim()
+  };
+  await fetch('/live/start', {method:'POST',headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  const bust = Date.now();
+  img.src = '/live/stream?ts=' + bust; // MJPEG stream
+  if (!window._poll){ window._poll = setInterval(pollStats, 500); }
+};
+
+btnStop.onclick = async () => {
+  await fetch('/live/stop', {method:'POST'});
+  img.src = '';
+  if (window._poll){ clearInterval(window._poll); window._poll = null; }
+};
+
+</script>
+{% endblock %}

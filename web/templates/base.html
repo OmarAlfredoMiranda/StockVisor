@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>StockVisor v8</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="nav">
+      <div class="left"><h1>🧠 StockVisor v8</h1></div>
+      <div class="right">
+        <a href="{{ url_for('home') }}">Inicio</a>
+        <a href="{{ url_for('single') }}">Imagen única</a>
+        <a href="{{ url_for('live') }}">LiveCam</a>
+      </div>
+    </div>
+    {% block body %}{% endblock %}
+  </div>
+</body>
+</html>

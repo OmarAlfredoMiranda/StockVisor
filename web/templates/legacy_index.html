@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="card">
+  <p>Cuenta productos, detecta faltantes y muestra métricas rápido. 👇</p>
+  <div style="display:flex; gap:8px">
+    <a class="badge" href="{{ url_for('single') }}">Imagen única</a>
+    <a class="badge" href="{{ url_for('live') }}">LiveCam</a>
+  </div>
+  <p class="small">Model: YOLOv8n — conf predeterminado {{ conf }}</p>
+</div>
+{% endblock %}
